@@ -185,6 +185,10 @@ class DownloadModal extends React.Component {
       buttons.push(["Selected Metadata (TSV)", `Per-sample metadata for strains which are currently displayed (n = ${selectedTipsCount}/${this.props.metadata.mainTreeNumTips}).`,
         (<MetaIcon width={iconWidth} selected />), () => helpers.strainTSV(this.props.dispatch, filePrefix, this.props.nodes,
           this.props.metadata.colorings, true, this.props.tree.visibility)]);
+        buttons.push(["Selected Genomes (fasta)", `Per-sample genome for strains which are currently displayed (n = ${selectedTipsCount}/${this.props.metadata.mainTreeNumTips}).`,
+                      (<MetaIcon width={iconWidth} selected />), () => helpers.strainGenome(this.props.dispatch, filePrefix, this.props.nodes,
+                                                                                           this.props.metadata.colorings, true, this.props.tree.visibility)]);
+
     }
     if (helpers.areAuthorsPresent(this.props.tree)) {
       buttons.push(["Author Metadata (TSV)", `Metadata for all samples in the dataset (n = ${this.props.metadata.mainTreeNumTips}) grouped by their ${uniqueAuthorCount} authors.`,
