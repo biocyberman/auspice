@@ -24,11 +24,11 @@ const getAvailableDatasets = async (localDataPath) => {
       !file.endsWith("_root-sequence.json") &&
       !file.endsWith("_seq.json")
     ))
-    .map((file) => file
-      .replace(".json", "")
-      .split("_")
-      .join("/")
-    );
+      .map((file) => file
+        .replace(".json", "")
+        .split("_")
+        .join("/")
+      );
 
     v2Files.forEach((filepath) => {
       datasets.push({
@@ -59,6 +59,37 @@ const getAvailableDatasets = async (localDataPath) => {
     utils.verbose(err);
   }
   return datasets;
+};
+
+const getAvailableGenomeFiles = async (localDataPath) => {
+  const genomeDatasets= [];
+  let genomeFiles = [];
+  /* get available genomes files which share the same name as dataset, but ends with `.fasta`
+   */
+  try {
+    const files = await readdir(localDataPath);
+    const gFiles = files.filter((file) => (
+      file.endsWith(".fasta")
+    ));
+    genomeFiles = gFiles;
+    const gDatasets = gFiles
+    .map((file) => file
+      .replace(".fasta", "")
+      .split("_")
+      .join("/")
+    );
+
+    gDatasets.forEach((filepath) => {
+      genomeDatasets.push({
+        request: filepath,
+        v2: true,
+      });
+    });
+  } catch (err) {
+    utils.warn(`Couldn't collect available genome files (path searched: ${localDataPath})`);
+    utils.verbose(err);
+  }
+  return genomeFiles;
 };
 
 const getAvailableNarratives = async (localNarrativesPath) => {
@@ -96,5 +127,6 @@ const setUpGetAvailableHandler = ({datasetsPath, narrativesPath}) => {
 module.exports = {
   setUpGetAvailableHandler,
   getAvailableDatasets,
-  getAvailableNarratives
+  getAvailableNarratives,
+  getAvailableGenomeFiles
 };

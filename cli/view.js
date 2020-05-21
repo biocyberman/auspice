@@ -58,6 +58,8 @@ const loadAndAddHandlers = ({app, handlersArg, datasetDir, narrativeDir}) => {
       .setUpGetDatasetHandler({datasetsPath});
     handlers.getNarrative = require("./server/getNarrative")
       .setUpGetNarrativeHandler({narrativesPath});
+    genomeDbs = require("./server/prepGenomeDbs")
+      .prepGenomeDbs(datasetsPath); /* use sanitized datasetPath */
   }
 
   /* apply handlers */
@@ -138,7 +140,7 @@ const run = (args) => {
     utils.log("---------------------------------------------------\n\n");
   }).on('error', (err) => {
     if (err.code === 'EADDRINUSE') {
-      utils.error(`Port ${app.get('port')} is currently in use by another program. 
+      utils.error(`Port ${app.get('port')} is currently in use by another program.
       You must either close that program or specify a different port by setting the shell variable
       "$PORT". Note that on MacOS / Linux, "lsof -n -i :${app.get('port')} | grep LISTEN" should
       identify the process currently using the port.`);

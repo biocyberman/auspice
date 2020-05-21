@@ -213,6 +213,17 @@ const fetchDataAndDispatch = async (dispatch, url, query, narrativeBlocks) => {
     }
   }
 
+  /* prepare for genome download if available */
+  if (datasetJson.meta.panels) {
+    try {
+      const genomeFile = await getDataset(mainDatasetUrl, {type: "fasta"})
+        .then((res) => res.json());
+      dispatch(loadFrequencies(frequencyData));
+    } catch (err) {
+      console.error("Failed to fetch frequencies", err.message);
+    }
+  }
+
   /* Get available datasets -- this is needed for the sidebar dataset-change dropdowns etc */
   try {
     const availableDatasets = await fetchJSON(`${getServerAddress()}/getAvailable?prefix=${window.location.pathname}`);
