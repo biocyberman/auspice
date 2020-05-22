@@ -20,13 +20,10 @@ const getDbPath = (fastaPath) => {
 @param: ids: an array of sequence ids
 @param: dbPath: resolvable path to NeDB database of genome sequences
  */
-const fetchRecords = (ids, dbPath) =>
-  new Promise((resolve, reject) => {
-    const db = new Promise((resol) => {
-      resol(new Engine({filename: dbPath, autoload: true}))
-    })
-    db.then((con) =>
-    con.find({id: {$in: ids}}, (err, docs) => {
+const fetchRecordsbak = (ids, dbPath) =>
+  {
+  this.con = new Engine({filename: dbPath, autoload: true})
+  this.con.find({id: {$in: ids}}, (err, docs) => {
       if (err){
         reject(err)
       } else if (docs.length == 0 ) {
@@ -35,7 +32,23 @@ const fetchRecords = (ids, dbPath) =>
         resolve(docs)
       }
     })
-  )
+  }
+const fetchRecords = (ids, dbPath) =>
+  new Promise((resolve, reject) => {
+    console.log("dbPath: " + dbPath)
+    const db = new Engine({filename: dbPath, autoload: true})
+    if (db) {
+      console.log("db connected")
+      db.find({id: {$in: ids}}, (err, docs) => {
+        if (err) {
+          reject(err)
+        } else if (docs.length == 0) {
+          console.log("No record found!")
+        } else {
+          resolve(docs)
+        }
+      })
+    }
   })
 /*
 @param: dbRoot: path to directory where genome database should be saved
