@@ -1,9 +1,15 @@
-const fs = require('fs')
+const fs = require('fs');
 const path = require("path");
-const through = require('through2')
-const {PassThrough} = require('stream')
-var Engine = require('nedb');
-const fasta = require('bionode-fasta')
+const through = require('through2');
+const {PassThrough} = require('stream');
+const Engine = require('nedb');
+const fasta = require('bionode-fasta');
+const bodyParser = require('body-parser');
+
+const { promisify } = require('util');
+const { findAvailableSecondTreeOptions } = require('./getDatasetHelpers');
+
+const readdir = promisify(fs.readdir);
 
 /*
 All NeDB database files are stored in the subdirectory 'genomeDbs'
@@ -13,43 +19,56 @@ const getDbPath = (fastaPath) => {
   const dbRoot = path.join(path.dirname(fastaPath), 'genomeDbs');
   const dbPath = path.join(dbRoot,
     path.basename(fastaPath).replace(".fasta", ".db"));
-  return dbPath
-}
+  return dbPath;
+};
 
 /*
 @param: ids: an array of sequence ids
 @param: dbPath: resolvable path to NeDB database of genome sequences
  */
-const fetchRecordsbak = (ids, dbPath) =>
-  {
-  this.con = new Engine({filename: dbPath, autoload: true})
-  this.con.find({id: {$in: ids}}, (err, docs) => {
-      if (err){
-        reject(err)
-      } else if (docs.length == 0 ) {
-        console.log("No record found!")
-      } else {
-        resolve(docs)
-      }
-    })
-  }
 const fetchRecords = (ids, dbPath) =>
   new Promise((resolve, reject) => {
-    console.log("dbPath: " + dbPath)
-    const db = new Engine({filename: dbPath, autoload: true})
+    console.log("dbPath: " + dbPath);
+    const db = new Engine({filename: dbPath, autoload: true});
     if (db) {
-      console.log("db connected")
+      console.log("db connected");
       db.find({id: {$in: ids}}, (err, docs) => {
         if (err) {
-          reject(err)
+          console.log('EE');
+          reject(err);
         } else if (docs.length == 0) {
-          console.log("No record found!")
+          console.log("No record found!");
+          resolve(docs);
         } else {
-          resolve(docs)
+          console.log("records: " + docs.length);
+          resolve(docs);
         }
-      })
+      });
     }
-  })
+  });
+
+
+const getGenomeDB = ({datasetsPath}) => {
+  return async (req, res) => { // eslint-disable-line consistent-return
+    try {
+      res.setHeader('Content-Type', 'text/plain');
+      var prefix = req.body.prefix
+        .replace(/^\//, '')
+        .replace(/\/$/, '')
+        .split("/")
+        .join("_");      
+      var db = await fetchRecords(req.body.ids, 'data/genomeDbs/' + prefix + '.db');
+      db.forEach(v=> {
+          res.write('>' + v.id + '\n');
+          res.write(v.seq + '\n');
+      })
+      res.end();
+    } catch (err) {
+      console.trace(err);
+    }
+  };
+};
+
 /*
 @param: dbRoot: path to directory where genome database should be saved
 @param: fastaPath: path to fasta file to use as input to create database
@@ -57,82 +76,99 @@ const fetchRecords = (ids, dbPath) =>
 Database will overwrite existing database files to avoid duplicates.
 TODO: Maybe do something else to prevent unexpected data loss
  */
-async function processGenomeFile(dbRoot, fastaPath){
-
-  process.stdin.setEncoding('utf8')
+async function processGenomeFile(dbRoot, fastaPath) {
+  process.stdin.setEncoding('utf8');
 
   if (!fs.existsSync(dbRoot)) {
-    fs.mkdirSync(dbRoot)
+    fs.mkdirSync(dbRoot);
   }
-  const dbPath = getDbPath( fastaPath)
+  const dbPath = getDbPath(fastaPath);
 
-  if (fs.existsSync(dbPath)){
-    fs.unlink(dbPath, () => { console.log(`Overwrote ${dbPath} with new data!`)})
+  if (fs.existsSync(dbPath)) {
+    fs.unlink(dbPath, () => { console.log(`Overwrote ${dbPath} with new data!`);});
   }
 
-  const processRecord = new PassThrough()
-  let db = new Engine({filename: dbPath, autoload: true});
-  var rc = 0;
+  const processRecord = new PassThrough();
+  const db = new Engine({filename: dbPath, autoload: true});
+  let rc = 0;
 
-  processRecord.on('data', (rec)  => {
-    obj = JSON.parse(rec)
+  processRecord.on('data', (rec) => {
+    obj = JSON.parse(rec);
     const wrappedSeq = obj.seq.match(/.{1,80}/g).join('\n') + '\n';
-    let outrec = {id: obj.id, seq: wrappedSeq, source:  fastaPath};
-    db.insert(outrec)
+    const outrec = {id: obj.id, seq: wrappedSeq, source: fastaPath};
+    db.insert(outrec);
     rc++;
-  })
+  });
 
   processRecord.on('end', () =>
     console.log(`Total added: ${rc} seqs`)
-    )
-  const rs = fs.createReadStream( fastaPath)
+  );
+  const rs = fs.createReadStream(fastaPath);
   rs.pipe(fasta())
-    .pipe(processRecord)
+    .pipe(processRecord);
 }
 
+const prepareDB = async (path) => {
+  try {
+    const files = await readdir(path);
+    const v2Files = files.filter((file) => (
+      file.endsWith(".fasta")
+    ));
+    v2Files.forEach((v) => {
+      makeDB(path, path + '/' + v);
+    });
 
-const makeDB =  (dbRoot, fastaPath) => new Promise((resolve, reject) => {
 
-  process.stdin.setEncoding('utf8')
+  } catch (err) {
+    // utils.warn(`Couldn't collect available dataset files (path searched: ${path})`);
+    // utils.verbose(err);
+  }
+};
+
+const makeDB = (dbRoot, fastaPath) => new Promise((resolve, reject) => {
+
+  process.stdin.setEncoding('utf8');
 
   if (!fs.existsSync(dbRoot)) {
-    fs.mkdirSync(dbRoot)
+    fs.mkdirSync(dbRoot);
   }
-  const dbPath = getDbPath( fastaPath)
+  const dbPath = getDbPath(fastaPath);
 
-  if (fs.existsSync(dbPath)){
-    fs.unlink(dbPath, () => { console.log(`Overwrote ${dbPath} with new data!`)})
+  if (fs.existsSync(dbPath)) {
+    fs.unlink(dbPath, () => { console.log(`Overwrote ${dbPath} with new data!`);});
   }
 
-  const processRecord = new PassThrough()
-  let db = new Engine({filename: dbPath, autoload: true});
-  var rc = 0;
+  const processRecord = new PassThrough();
+  const db = new Engine({filename: dbPath, autoload: true});
+  let rc = 0;
 
-  processRecord.on('data', (rec)  => {
-    obj = JSON.parse(rec)
+  processRecord.on('data', (rec) => {
+    obj = JSON.parse(rec);
     const wrappedSeq = obj.seq.match(/.{1,80}/g).join('\n') + '\n';
-    let outrec = {id: obj.id, seq: wrappedSeq, source:  fastaPath};
-    db.insert(outrec)
+    const outrec = {id: obj.id, seq: wrappedSeq, source: fastaPath};
+    db.insert(outrec);
     rc++;
-  })
+  });
 
-  processRecord.on('end', () =>
-    {
-    console.log(`Total added: ${rc} seqs`)
+  processRecord.on('end', () => {
+    console.log(`Total added: ${rc} seqs`);
     if (fs.existsSync(dbPath)) {
-    resolve()
-   } else {
-      reject(`File: ${dbPath} was not created.`)
-    }}
-  )
-  const rs = fs.createReadStream( fastaPath)
+      resolve();
+    } else {
+      reject(`File: ${dbPath} was not created.`);
+    }
+  }
+  );
+  const rs = fs.createReadStream(fastaPath);
   rs.pipe(fasta())
-    .pipe(processRecord)
+    .pipe(processRecord);
 
-})
+});
 module.exports = {
   processGenomeFile,
   fetchRecords,
   getDbPath,
-  makeDB
+  makeDB,
+  prepareDB,
+  getGenomeDB
 };

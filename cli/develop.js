@@ -10,6 +10,7 @@ const version = require('../src/version').version;
 const chalk = require('chalk');
 const generateWebpackConfig = require("../webpack.config.js").default;
 const SUPPRESS = require('argparse').Const.SUPPRESS;
+const bodyParser = require('body-parser');
 
 const addParser = (parser) => {
   const description = `Launch auspice in development mode.
@@ -49,6 +50,11 @@ const run = (args) => {
   process.env.BABEL_INCLUDE_TIMING_FUNCTIONS = args.includeTiming;
   process.env.BABEL_ENV = "development";
   process.env.BABEL_EXTENSION_PATH = extensionPath;
+
+  // parse application/json
+  app.use(bodyParser.json());
+  // parse application/x-www-form-urlencoded
+  app.use(bodyParser.urlencoded({ extended: false }));
 
   app.use((webpackDevMiddleware)(
     compiler,

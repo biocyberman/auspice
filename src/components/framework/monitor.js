@@ -1,17 +1,17 @@
-import React from "react";
-import PropTypes from 'prop-types';
-import { connect } from "react-redux";
-import _throttle from "lodash/throttle";
-import { BROWSER_DIMENSIONS, CHANGE_PANEL_LAYOUT, TOGGLE_SIDEBAR } from "../../actions/types";
-import { changePage } from "../../actions/navigation";
-import { twoColumnBreakpoint, controlsHiddenWidth} from "../../util/globals";
+  import React from "react";
+  import PropTypes from 'prop-types';
+  import { connect } from "react-redux";
+  import _throttle from "lodash/throttle";
+  import { BROWSER_DIMENSIONS, CHANGE_PANEL_LAYOUT, TOGGLE_SIDEBAR } from "../../actions/types";
+  import { changePage } from "../../actions/navigation";
+  import { twoColumnBreakpoint, controlsHiddenWidth} from "../../util/globals";
 
-@connect((state) => ({
+  @connect((state) => ({
   displayNarrative: state.narrative.display,
   canTogglePanelLayout: state.controls.canTogglePanelLayout,
   controlDefaults: state.controls.defaults
-}))
-class Monitor extends React.Component {
+  }))
+  class Monitor extends React.Component {
   constructor(props) {
     super(props);
   }
@@ -76,6 +76,6 @@ class Monitor extends React.Component {
   render() {
     return null;
   }
-}
+  }
 
-export default Monitor;
+  export default Monitor;

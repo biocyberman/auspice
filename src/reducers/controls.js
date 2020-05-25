@@ -43,6 +43,7 @@ export const getDefaultControlsState = () => {
     region: null,
     search: null,
     strain: null,
+    gridFiltered: null,
     geneLength: {},
     mutType: defaultMutType,
     temporalConfidence: {exists: false, display: false, on: false},
@@ -246,6 +247,10 @@ const Controls = (state = getDefaultControlsState(), action) => {
         state.coloringsPresentOnTree.add(colorBy);
       }
       return Object.assign({}, state, {coloringsPresentOnTree: state.coloringsPresentOnTree});
+    case 'GRID_FILTERED':
+
+      
+      return Object.assign({}, state, {gridFiltered: action.data});
     default:
       return state;
   }

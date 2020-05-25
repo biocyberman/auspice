@@ -195,7 +195,8 @@ export const infoPanelStyles = {
     fontFamily: dataFont,
     fontSize: 14,
     lineHeight: 1,
-    fontWeight: 300
+    fontWeight: 300,
+    opacity: 100
   },
   modalContainer: {
     position: "absolute",

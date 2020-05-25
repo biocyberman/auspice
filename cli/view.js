@@ -11,6 +11,7 @@ const utils = require("./utils");
 const version = require('../src/version').version;
 const chalk = require('chalk');
 const SUPPRESS = require('argparse').Const.SUPPRESS;
+const bodyParser = require('body-parser');
 
 
 const addParser = (parser) => {
@@ -58,14 +59,18 @@ const loadAndAddHandlers = ({app, handlersArg, datasetDir, narrativeDir}) => {
       .setUpGetDatasetHandler({datasetsPath});
     handlers.getNarrative = require("./server/getNarrative")
       .setUpGetNarrativeHandler({narrativesPath});
-    genomeDbs = require("./server/prepGenomeDbs")
-      .prepGenomeDbs(datasetsPath); /* use sanitized datasetPath */
+    handlers.genomeDbs = require("./server/handleGenomeDbs")
+      .prepareDB(datasetsPath); /* use sanitized datasetPath */
+    handlers.genomeDbs = require("./server/handleGenomeDbs")
+      .getGenomeDB(datasetsPath); /* use sanitized datasetPath */
   }
 
   /* apply handlers */
   app.get("/charon/getAvailable", handlers.getAvailable);
   app.get("/charon/getDataset", handlers.getDataset);
   app.get("/charon/getNarrative", handlers.getNarrative);
+  app.get("/charon/getGenomeData", handlers.genomeDbs);
+  app.post("/charon/getGenomeData", handlers.genomeDbs);
   app.get("/charon*", (req, res) => {
     res.statusMessage = "Query unhandled -- " + req.originalUrl;
     utils.warn(res.statusMessage);
@@ -104,7 +109,13 @@ const run = (args) => {
   const app = express();
   app.set('port', process.env.PORT || 4000);
   app.set('host', process.env.HOST || "localhost");
+  // parse application/json
+  app.use(bodyParser.json());
   app.use(compression());
+  // parse application/x-www-form-urlencoded
+  app.use(bodyParser.urlencoded({ extended: false }));
+
+
   app.use(nakedRedirect({reverse: true})); /* redirect www.name.org to name.org */
 
   if (args.customBuild) {
@@ -140,7 +151,7 @@ const run = (args) => {
     utils.log("---------------------------------------------------\n\n");
   }).on('error', (err) => {
     if (err.code === 'EADDRINUSE') {
-      utils.error(`Port ${app.get('port')} is currently in use by another program.
+      utils.error(`Port ${app.get('port')} is currently in use by another program. 
       You must either close that program or specify a different port by setting the shell variable
       "$PORT". Note that on MacOS / Linux, "lsof -n -i :${app.get('port')} | grep LISTEN" should
       identify the process currently using the port.`);

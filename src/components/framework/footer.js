@@ -6,12 +6,28 @@ import { FaDownload } from "react-icons/fa";
 import { dataFont, medGrey, materialButton } from "../../globalStyles";
 import { TRIGGER_DOWNLOAD_MODAL } from "../../actions/types";
 import Flex from "./flex";
-import { applyFilter } from "../../actions/tree";
+import { applyFilter, updateVisibleTipsAndBranchThicknesses } from "../../actions/tree";
 import { version } from "../../version";
 import { publications } from "../download/downloadModal";
 import { isValueValid } from "../../util/globals";
 import hardCodedFooters from "./footer-descriptions";
 import { parseMarkdown } from "../../util/parseMarkdown";
+import DataGrid from 'react-data-grid';
+import { Toolbar, Data, Filters } from "react-data-grid-addons";
+import { getTraitFromNode } from "../../util/treeMiscHelpers";
+
+const defaultColumnProperties = {
+  filterable: true,
+  width: 160
+};
+
+const selectors = Data.Selectors;
+const {
+  NumericFilter,
+  AutoCompleteFilter,
+  MultiSelectFilter,
+  SingleSelectFilter
+} = Filters;
 
 const dot = (
   <span style={{marginLeft: 10, marginRight: 10}}>
@@ -235,7 +251,8 @@ const removeFiltersButton = (dispatch, filterNames, outerClassName, label) => {
     metadata: state.metadata,
     colorOptions: state.metadata.colorOptions,
     browserDimensions: state.browserDimensions.browserDimensions,
-    activeFilters: state.controls.filters
+    activeFilters: state.controls.filters,
+    controls: state.controls
   };
 })
 class Footer extends React.Component {
@@ -283,7 +300,6 @@ class Footer extends React.Component {
       </div>
     );
   }
-
   getUpdated() {
     const { t } = this.props;
     if (this.props.metadata.updated) {
@@ -314,23 +330,141 @@ class Footer extends React.Component {
     );
   }
 
+  constructor(props) {
+    super(props);
+    this.state = {filters: {}, sortColumn: null, sortDirection: null};
+
+  }
+  handleFilterChange(filter) {
+    const newFilters = { ...this.state.filters };
+    if (filter.filterTerm) {
+      newFilters[filter.column.key] = filter;
+    } else {
+      delete newFilters[filter.column.key];
+    }
+    return newFilters;
+  }
+
+  getValidFilterValues(rows, columnId) {
+    return rows
+      .map(r => r[columnId])
+      .filter((item, i, a) => {
+        return i === a.indexOf(item);
+      });
+  }
+
+  getRows(rows, filters) {
+    const rows1 = selectors.getRows({ rows, filters });
+    const selIds = rows1.map(v=>v.arrayIdx);
+    if (this.props.controls.gridFiltered && this.props.controls.gridFiltered.length == selIds.length && this.props.controls.gridFiltered.sort().every(function(value, index) { return value === selIds.sort()[index]}))
+    {}
+    else {
+      this.props.dispatch({type: 'GRID_FILTERED', data: selIds});
+      this.props.dispatch(updateVisibleTipsAndBranchThicknesses());
+    }
+    
+    if (this.state.sortColumn) {
+      return this.sortRows(rows1, this.state.sortColumn, this.state.sortDirection);
+    }
+    return rows1;
+  }
+  sortRows(initialRows, sortColumn, sortDirection) {
+    console.log(sortColumn);
+    const comparer = (a, b) => {
+      if (sortDirection === "ASC") {
+        return a[sortColumn] > b[sortColumn] ? 1 : -1;
+      } else if (sortDirection === "DESC") {
+        return a[sortColumn] < b[sortColumn] ? 1 : -1;
+      }
+    };
+    return sortDirection === "NONE" ? initialRows : [...initialRows].sort(comparer);
+  }
   render() {
     if (!this.props.metadata || !this.props.tree.nodes) return null;
-    const width = this.props.width - 30; // need to subtract margin when calculating div width
+    const width = this.props.width - 30; // need to subtract margin when calculating div width   
+    const dates = {
+      dateMinNumeric: this.props.controls.dateMinNumeric,
+      dateMaxNumeric: this.props.controls.dateMaxNumeric
+    };
+    var data = this.props.tree.nodes.filter(v=>
+      {
+        const nodeDate = getTraitFromNode(v, "num_date");
+        return v.hasChildren==false && v.inView == true && nodeDate >= dates.dateMinNumeric && nodeDate <= dates.dateMaxNumeric;
+      });
+    var columns1 = [
+      {
+        headerName: 'Idx',
+        field: 'arrayIdx',
+        key: 'arrayIdx',
+        name: 'Idx',
+        sortable: true,
+        filterRenderer: NumericFilter,
+        ...defaultColumnProperties
+
+      },
+      {
+        key: 'name',
+        name: 'Name',
+        sortable: true,
+        // filterRenderer: AutoCompleteFilter,
+        ...defaultColumnProperties
+
+      },
+      {
+        headerName: 'fullTipCount',
+        field: 'fullTipCount',
+        key: 'fullTipCount',
+        name: 'fullTipCount',
+        sortable: true,
+        filter: true,
+        ...defaultColumnProperties
+      }, 
+    ];
+    Object.keys(this.props.activeFilters).map((name) => {
+      columns1.push({
+        headerName: this.props.metadata.colorings[name] ? this.props.metadata.colorings[name].title : name,
+        field: 'node_attrs.' + name + '.value',
+        name: this.props.metadata.colorings[name] ? this.props.metadata.colorings[name].title : name,
+        key: 'node_attrs.' + name + '.value',
+        sortable: true,
+        filter: true,
+        filterRenderer: AutoCompleteFilter,
+        ...defaultColumnProperties
+      });
+    });
+
+    data = data.map(v => {
+      var val = {arrayIdx: v.arrayIdx, fullTipCount: v.fullTipCount, name: v.name };
+      Object.keys(this.props.activeFilters).map((name) => {
+        if (v.node_attrs[name] && v.node_attrs[name].value)
+          val['node_attrs.' + name + '.value'] = v.node_attrs[name].value;
+        else 
+          val['node_attrs.' + name + '.value'] = '';
+      });
+      return val;
+    });
+
+    var filteredRows = this.getRows(data, this.state.filters);
     return (
       <FooterStyles>
         <div style={{width: width}}>
           <div className='line'/>
           {getAcknowledgments(this.props.metadata, this.props.dispatch)}
           <div className='line'/>
-          {Object.keys(this.props.activeFilters).map((name) => {
-            return (
-              <div key={name}>
-                {this.displayFilter(name)}
-                <div className='line'/>
-              </div>
-            );
-          })}
+          <DataGrid
+            columns={columns1}
+            rowGetter={i => filteredRows[i]}
+            rowsCount={filteredRows.length}
+            minHeight={500}
+            toolbar={<Toolbar enableFilter={true} />}
+            onAddFilter={filter => this.setState({filters: this.handleFilterChange(filter)}) }
+            onClearFilters={() => this.setState({filters: {}})}
+            getValidFilterValues={columnKey => this.getValidFilterValues(data, columnKey)}
+            onGridSort={(sortColumn, sortDirection) => {
+              this.setState({sortColumn: sortColumn, sortDirection: sortDirection});
+            }
+            }
+            minHeight={550} />          
           <Flex className='finePrint'>
             {this.getUpdated()}
             {dot}

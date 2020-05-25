@@ -13,16 +13,20 @@ import { getAcknowledgments} from "../framework/footer";
 import { createSummary, getNumSelectedTips } from "../info/info";
 import { getFullAuthorInfoFromNode } from "../../util/treeMiscHelpers";
 
+import { makeStyles } from '@material-ui/core/styles';
+import Drawer from '@material-ui/core/Drawer';
+import Button from '@material-ui/core/Button';
+import List from '@material-ui/core/List';
+import Divider from '@material-ui/core/Divider';
+import ListItem from '@material-ui/core/ListItem';
+import ListItemIcon from '@material-ui/core/ListItemIcon';
+import ListItemText from '@material-ui/core/ListItemText';
+import InboxIcon from '@material-ui/icons/MoveToInbox';
+import MailIcon from '@material-ui/icons/Mail';
+
 const RectangularTreeIcon = withTheme(icons.RectangularTree);
 const PanelsGridIcon = withTheme(icons.PanelsGrid);
 const MetaIcon = withTheme(icons.Meta);
-
-// const dataUsage = [
-//   `The data presented here is intended to rapidly disseminate analysis of important pathogens.
-//   Unpublished data is included with permission of the data generators, and does not impact their right to publish.`,
-//   `Please contact the respective authors (available via the TSV files below) if you intend to carry out further research using their data.
-//   Derived data, such as phylogenies, can be downloaded below - please contact the relevant authors where appropriate.`
-// ];
 
 export const publications = {
   nextstrain: {
@@ -185,10 +189,9 @@ class DownloadModal extends React.Component {
       buttons.push(["Selected Metadata (TSV)", `Per-sample metadata for strains which are currently displayed (n = ${selectedTipsCount}/${this.props.metadata.mainTreeNumTips}).`,
         (<MetaIcon width={iconWidth} selected />), () => helpers.strainTSV(this.props.dispatch, filePrefix, this.props.nodes,
           this.props.metadata.colorings, true, this.props.tree.visibility)]);
-        buttons.push(["Selected Genomes (fasta)", `Per-sample genome for strains which are currently displayed (n = ${selectedTipsCount}/${this.props.metadata.mainTreeNumTips}).`,
-                      (<MetaIcon width={iconWidth} selected />), () => helpers.strainGenome(this.props.dispatch, filePrefix, this.props.nodes,
-                                                                                           this.props.metadata.colorings, true, this.props.tree.visibility)]);
-
+      buttons.push(["Selected Genomes (fasta)", `Per-sample genome for strains which are currently displayed (n = ${selectedTipsCount}/${this.props.metadata.mainTreeNumTips}).`,
+        (<MetaIcon width={iconWidth} selected />), () => helpers.strainGenome(this.props.dispatch, filePrefix, this.props.nodes,
+          this.props.metadata.colorings, true, this.props.tree.visibility)]);
     }
     if (helpers.areAuthorsPresent(this.props.tree)) {
       buttons.push(["Author Metadata (TSV)", `Metadata for all samples in the dataset (n = ${this.props.metadata.mainTreeNumTips}) grouped by their ${uniqueAuthorCount} authors.`,
@@ -232,6 +235,14 @@ class DownloadModal extends React.Component {
       this.props.t
     );
   }
+  toggleDrawer() {
+    // if (event.type === 'keydown' && (event.key === 'Tab' || event.key === 'Shift')) {
+    //   return;
+    // }
+    console.log('toggleDrawer');
+    this.props.dispatch({ type: DISMISS_DOWNLOAD_MODAL });
+  }
+
   render() {
     const { t } = this.props;
 
@@ -241,14 +252,21 @@ class DownloadModal extends React.Component {
     const panelStyle = {...infoPanelStyles.panel};
     panelStyle.width = this.props.browserDimensions.width * 0.66;
     panelStyle.maxWidth = panelStyle.width;
-    panelStyle.maxHeight = this.props.browserDimensions.height * 0.66;
+    // panelStyle.maxHeight = this.props.browserDimensions.height * 0.66;
     panelStyle.fontSize = 14;
     panelStyle.lineHeight = 1.4;
+    panelStyle.backgroundColor = 'none';
 
     const meta = this.props.metadata;
     return (
-      <div style={infoPanelStyles.modalContainer} onClick={this.dismissModal}>
-        <div style={panelStyle} onClick={(e) => stopProp(e)}>
+      <Drawer anchor={'bottom'} open={this.props.show} onClick={()=>this.toggleDrawer()}>
+
+      <div
+        role="presentation"
+        onClick={()=> this.toggleDrawer()}
+        onKeyDown={()=>this.toggleDrawer()}
+      >
+        <div style={{...panelStyle}} onClick={(e) => stopProp(e)} >
           <p style={infoPanelStyles.topRightMessage}>
             ({t("click outside this box to return to the app")})
           </p>
@@ -283,6 +301,7 @@ class DownloadModal extends React.Component {
 
         </div>
       </div>
+      </Drawer>
     );
   }
 }
