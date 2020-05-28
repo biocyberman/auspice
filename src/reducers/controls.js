@@ -44,6 +44,7 @@ export const getDefaultControlsState = () => {
     search: null,
     strain: null,
     gridFiltered: null,
+    isGenomeAvailable: false,
     geneLength: {},
     mutType: defaultMutType,
     temporalConfidence: {exists: false, display: false, on: false},
@@ -248,9 +249,9 @@ const Controls = (state = getDefaultControlsState(), action) => {
       }
       return Object.assign({}, state, {coloringsPresentOnTree: state.coloringsPresentOnTree});
     case 'GRID_FILTERED':
-
-      
       return Object.assign({}, state, {gridFiltered: action.data});
+    case 'GENOME_AVAILBLE':
+      return Object.assign({}, state, {isGenomeAvailable: action.data});
     default:
       return state;
   }

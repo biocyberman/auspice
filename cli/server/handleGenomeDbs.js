@@ -51,12 +51,22 @@ const fetchRecords = (ids, dbPath) =>
 const getGenomeDB = ({datasetsPath}) => {
   return async (req, res) => { // eslint-disable-line consistent-return
     try {
-      res.setHeader('Content-Type', 'text/plain');
+      
       var prefix = req.body.prefix
         .replace(/^\//, '')
         .replace(/\/$/, '')
         .split("/")
-        .join("_");      
+        .join("_");
+      if (!req.body.ids || req.body.ids.length === 0) {
+        res.setHeader('Content-Type', 'application/json');
+        if (fs.existsSync('data/genomeDbs/' + prefix + '.db')) {
+          res.end(JSON.stringify({result: true}));
+        } else {
+          res.end(JSON.stringify({result: false}));
+        }
+        return;
+      }
+      res.setHeader('Content-Type', 'text/plain');
       var db = await fetchRecords(req.body.ids, 'data/genomeDbs/' + prefix + '.db');
       db.forEach(v=> {
           res.write('>' + v.id + '\n');
