@@ -146,6 +146,7 @@ const FooterStyles = styled.div`
 
 `;
 
+
 export const getAcknowledgments = (metadata, dispatch) => {
   /**
    * If the metadata contains a description key, then it will take precendence the hard-coded
@@ -332,8 +333,12 @@ class Footer extends React.Component {
 
   constructor(props) {
     super(props);
-    this.state = {filters: {}, sortColumn: null, sortDirection: null};
+    this.state = {filters: {}, sortColumn: null, sortDirection: null, datagrid: null};
 
+  }
+  componentDidMount() {
+    if (this.state.datagrid)
+      this.state.datagrid.onToggleFilter();
   }
   handleFilterChange(filter) {
     const newFilters = { ...this.state.filters };
@@ -391,6 +396,7 @@ class Footer extends React.Component {
         const nodeDate = getTraitFromNode(v, "num_date");
         return v.hasChildren==false && v.inView == true && nodeDate >= dates.dateMinNumeric && nodeDate <= dates.dateMaxNumeric;
       });
+    console.log(data[0]);
     var columns1 = [
       {
         headerName: 'Idx',
@@ -452,6 +458,7 @@ class Footer extends React.Component {
           {getAcknowledgments(this.props.metadata, this.props.dispatch)}
           <div className='line'/>
           <DataGrid
+            ref={(datagrid)=>{this.state.datagrid = datagrid;}}
             columns={columns1}
             rowGetter={i => filteredRows[i]}
             rowsCount={filteredRows.length}

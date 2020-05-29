@@ -184,3 +184,7 @@ strong {
 .react-grid-Cell__value > div {
   margin-top: 6px;
 }
+
+.react-grid-Toolbar {
+  display: none !important;
+}
