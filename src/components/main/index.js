@@ -160,7 +160,7 @@ render() {
           <MainDisplayMarkdown width={calcUsableWidth(availableWidth, 1)}/> :
           null
         }
-        {/* {this.props.displayNarrative|| this.props.showOnlyPanels ? null : 
+        {this.props.displayNarrative|| this.props.showOnlyPanels ? null : 
           (<div style={{position: 'fixed', top: 30, right: 30, zIndex: 100, border:0}}>
             
             <button
@@ -170,7 +170,7 @@ render() {
             >
             <FaDownload />
               </button>
-          </div>)} */}
+          </div>)}
       </PanelsContainer>
       {/* overlay (used for mobile to open / close sidebar) */}
       {this.state.mobileDisplay ?

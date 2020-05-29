@@ -457,7 +457,7 @@ class Footer extends React.Component {
           <div className='line'/>
           {getAcknowledgments(this.props.metadata, this.props.dispatch)}
           <div className='line'/>
-          {/* <DataGrid
+          <DataGrid
             ref={(datagrid)=>{this.state.datagrid = datagrid;}}
             columns={columns1}
             rowGetter={i => filteredRows[i]}
@@ -471,7 +471,7 @@ class Footer extends React.Component {
               this.setState({sortColumn: sortColumn, sortDirection: sortDirection});
             }
             }
-            minHeight={550} />           */}
+            minHeight={550} />          
           <Flex className='finePrint'>
             {this.getUpdated()}
             {dot}

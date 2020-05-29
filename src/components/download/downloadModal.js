@@ -275,7 +275,7 @@ class DownloadModal extends React.Component {
 
     const meta = this.props.metadata;
     return (
-      // <Drawer anchor={'bottom'} open={this.props.show} onClick={()=>this.toggleDrawer()}>
+      <Drawer anchor={'bottom'} open={this.props.show} onClick={()=>this.toggleDrawer()}>
 
       <div
         role="presentation"
@@ -317,7 +317,7 @@ class DownloadModal extends React.Component {
 
         </div>
       </div>
-      // </Drawer>
+      </Drawer>
     );
   }
 }
