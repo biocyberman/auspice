@@ -225,6 +225,9 @@ const Controls = (state = getDefaultControlsState(), action) => {
       return Object.assign({}, state, {
         filters
       });
+    if (action.dateMax) {
+      newDates.dateMax = action.dateMax;
+      newDates.dateMaxNumeric = action.dateMaxNumeric;
     }
     case types.TOGGLE_MUT_TYPE:
       return Object.assign({}, state, {
