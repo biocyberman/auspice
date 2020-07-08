@@ -174,3 +174,24 @@ strong {
 @-moz-keyframes spin { 100% { -moz-transform: rotate(360deg); } }
 @-webkit-keyframes spin { 100% { -webkit-transform: rotate(360deg); } }
 @keyframes spin { 100% { -webkit-transform: rotate(360deg); transform:rotate(360deg); } }
+
+
+.MuiDrawer-paper {
+  background: rgba(55, 55, 55, 1) !important;
+  height: 50% !important;
+}
+
+.react-grid-Cell {
+  -webkit-user-select: text;
+  -moz-user-select: text;
+  -ms-user-select: text;
+  user-select: text;
+}
+
+.react-grid-Cell__value > div {
+  margin-top: 6px;
+}
+
+.react-grid-Toolbar {
+  display: none !important;
+}

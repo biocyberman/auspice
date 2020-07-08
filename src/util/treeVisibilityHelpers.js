@@ -166,6 +166,20 @@ export const calcVisibility = (tree, controls, dates) => {
         makeParentVisible(filtered, tree.nodes[idxsOfFilteredTips[i]]);
       }
     }
+    if (controls.gridFiltered) {
+      /* find the terminal nodes that were (a) already visibile and (b) match the filters */
+      filtered = tree.nodes.map((d, idx) => (
+        !d.hasChildren && inView[idx] && controls.gridFiltered.includes(idx)
+      ));
+      const idxsOfFilteredTips = filtered.reduce((a, e, i) => {
+        if (e) {a.push(i);}
+        return a;
+      }, []);
+      /* for each visibile tip, make the parent nodes visible (recursively) */
+      for (let i = 0; i < idxsOfFilteredTips.length; i++) {
+        makeParentVisible(filtered, tree.nodes[idxsOfFilteredTips[i]]);
+      }
+    }
     /* intersect the various arrays contributing to visibility */
     const visibility = tree.nodes.map((node, idx) => {
       if (inView[idx] && (filtered ? filtered[idx] : true)) {
