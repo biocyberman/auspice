@@ -225,9 +225,6 @@ const Controls = (state = getDefaultControlsState(), action) => {
       return Object.assign({}, state, {
         filters
       });
-    if (action.dateMax) {
-      newDates.dateMax = action.dateMax;
-      newDates.dateMaxNumeric = action.dateMaxNumeric;
     }
     case types.TOGGLE_MUT_TYPE:
       return Object.assign({}, state, {
@@ -278,10 +275,10 @@ const Controls = (state = getDefaultControlsState(), action) => {
       return state;
     }
       return Object.assign({}, state, {showTransmissionLines: action.data});
-  case types.GRID_FILTERED:
-    return Object.assign({}, state, {gridFiltered: action.data});
-  case types.GENOME_AVAILBLE:
-    return Object.assign({}, state, {isGenomeAvailable: action.data});
+    case types.GRID_FILTERED:
+      return Object.assign({}, state, {gridFiltered: action.data});
+    case types.GENOME_AVAILBLE:
+      return Object.assign({}, state, {isGenomeAvailable: action.data});
     default:
       return state;
   }
