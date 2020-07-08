@@ -349,8 +349,8 @@ class Footer extends React.Component {
       .filter((item, i, a) => {
         return i === a.indexOf(item);
       });
-    console.log("Valid Rows: " + rerows.length);
-    return rerows;
+    // console.log("Valid Rows: " + rerows.length);
+      return rerows;
   }
 
   getRows(rows, filters) {
@@ -394,7 +394,7 @@ class Footer extends React.Component {
       const nodeDate = getTraitFromNode(v, "num_date");
       return v.hasChildren==false && v.inView == true && nodeDate >= dates.dateMinNumeric && nodeDate <= dates.dateMaxNumeric;
     });
-    console.log("Data length :" + data.length);
+    //console.log("Data length :" + data.length);
     const columns1 = [
       {
         headerName: 'Idx',
@@ -437,7 +437,7 @@ class Footer extends React.Component {
       return val;
     });
 
-    console.log("Full data length :" + fullData.length);
+    //console.log("Full data length :" + fullData.length);
     const filteredRows = this.getRows(fullData, this.state.filters);
     return (<DataGrid
       ref={(datagrid) => {this.state.datagrid = datagrid;}}
