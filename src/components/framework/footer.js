@@ -413,6 +413,7 @@ class Footer extends React.Component {
         name: 'Strain',
         sortable: true,
         filter: true,
+        filterRenderer: AutoCompleteFilter,
         ...defaultColumnProperties
       }
     ];
