@@ -72,9 +72,9 @@ const loadAndAddHandlers = ({app, handlersArg, datasetDir, narrativeDir}) => {
   app.get("/charon/getGenomeData", handlers.handleGenomeDbs);
   app.post("/charon/getGenomeData", handlers.handleGenomeDbs);
   app.get("/charon*", (req, res) => {
-    res.statusMessage = "Query unhandled -- " + req.originalUrl;
-    utils.warn(res.statusMessage);
-    return res.status(500).end();
+    const errorMessage = "Query unhandled -- " + req.originalUrl;
+    utils.warn(errorMessage);
+    return res.status(500).type("text/plain").send(errorMessage);
   });
 
   return handlersArg ?
@@ -89,7 +89,7 @@ const getAuspiceBuild = () => {
     cwd !== sourceDir &&
     fs.existsSync(path.join(cwd, "index.html")) &&
     fs.existsSync(path.join(cwd, "dist")) &&
-    fs.existsSync(path.join(cwd, "dist", "auspice.bundle.js"))
+    fs.readdirSync(path.join(cwd, "dist")).filter((fn) => fn.match(/^auspice.bundle.[a-z0-9]+.js$/)).length === 1
   ) {
     return {
       message: "Serving the auspice build which exists in this directory.",

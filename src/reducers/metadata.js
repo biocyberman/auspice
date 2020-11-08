@@ -9,6 +9,7 @@ import * as types from "../actions/types";
 const Metadata = (state = {
   loaded: false, /* see comment in the sequences reducer for explanation */
   metadata: null,
+  rootSequence: undefined,
   colorOptions // this can't be removed as the colorScale currently runs before it should
 }, action) => {
   switch (action.type) {
@@ -16,6 +17,7 @@ const Metadata = (state = {
       return Object.assign({}, state, {
         loaded: false
       });
+    case types.URL_QUERY_CHANGE_WITH_COMPUTED_STATE:
     case types.CLEAN_START:
       return action.metadata;
     case types.ADD_COLOR_BYS:
@@ -30,6 +32,8 @@ const Metadata = (state = {
         return Object.assign({}, state, {buildUrl});
       }
       return state;
+    case types.SET_ROOT_SEQUENCE:
+      return {...state, rootSequence: action.data};
     default:
       return state;
   }
