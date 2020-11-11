@@ -425,7 +425,8 @@ class Footer extends React.Component {
         key: 'node_attrs.' + name + '.value',
         sortable: true,
         filter: true,
-        filterRenderer: AutoCompleteFilter,
+        filterRenderer: (this.props.metadata.colorings[name] &&
+          this.props.metadata.colorings[name].type == 'continuous') ? NumericFilter : AutoCompleteFilter,
         ...defaultColumnProperties
       });
     });
